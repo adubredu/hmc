@@ -86,11 +86,35 @@ def grad_potential_gaussian(q, x, prior, cov_rep):
   because a valid covariance matrix is symmetric.
   
   Args:
-    x (scipy.stats_multivariate_normal)
-      variable that we want to find the gradient of
+    x (Np array)
+      data drawn from the likelihood. Each column is an independent
+      draw from likelihood (column = single sample)
   """
-  
-  
+  # now compute the gradient
+  # assumed a standard normal prior so won't bother inverting
+  # $I$ matrix for covariance
+  # also assumed zero mean so wont bother subtracting away
+  print('q = {}'.format(q))
+  print(q.shape)
+  print(x.shape)
+  dq_prior = np.matmul(prior.cov, q)
+  x_rep = (x - q).reshape(-1, 1)
+  print('x_rep shape = {}'.format(x_rep.shape))
+  dq_likelihood = np.sum(np.matmul(cov_rep, x_rep), axis = 0)
+  return(dq_prior + dq_likelihood)
+
+
+def potential(q, x, prior, cov_rep, cov_det, n_samp):
+  x_rep = (x - q).reshape(-1, 1)
+  print('x_rep.shape = {}'.format(x_rep.shape))
+  print('q.shape = {}'.format(q.shape))
+  print('cov.shape = {}'.format(cov_rep.shape))
+  print('cov_det.shape = {}'.format(cov_det.shape))
+  U_prior = np.log(prior.eval(q))
+  print(U_prior)
+  U_likelihood = (-n_samp / 2) * (n_samp * np.log((2 * np.pi)) + np.log(cov_det)) - 0.5 * np.sum(np.matmul(np.matmul(x_rep.T, cov_rep), x_rep), axis = 0)
+  print(U_likelihood)
+  return(U_prior + U_likelihood)
 
 
 
