@@ -146,7 +146,7 @@ def one_d(n_samp = 20):
   ax.spines['bottom'].set_color('none')
   ax.spines['left'].set_color('none')
   ax.spines['right'].set_color('none')
-  ax.tick_params(labelcolor='w', top='off', bottom='off', left='off', right='off')
+  ax.tick_params(labelcolor='w', top=False, bottom=False, left=False, right=False)
   for j in range(0, len(epsilon)):
     axs = fig.add_subplot(2,2, j + 1)
     for i in range(1, n_samp):
