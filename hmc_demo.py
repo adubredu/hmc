@@ -166,8 +166,8 @@ def one_d(n_samp = 20):
   
 
 
-def simple_gaussian_hmc(epsilon = 0.2, L = 10, iters = 100):
-  """Compare HMC for sample where solution is known
+def simple_gaussian_hmc(epsilon = 0.002, L = 10, iters = 100, n_samp = 100):
+  """Demo to compare HMC for sample where solution is known
   
   Plot HMC draws from posterior against that of true posterior
   to see how it all works.
@@ -187,32 +187,68 @@ def simple_gaussian_hmc(epsilon = 0.2, L = 10, iters = 100):
     iters (int):
       number of times to iterate through series of L steps
       (L steps per iteration)
+    n_samp (int):
+      number of psuedo-data samples to work with
   """
   # initial value of position
-  current_q = np.zeros([0, 0])
+  current_q = np.zeros(2).reshape(2,1)
+  q_pos = []
   # prior with independant components
-  q_prior = multivariate_normal([0. 0], mean = 0, cov = 1)
-  # momentum
-  p_dist = multivariate_normal([0. 0], mean = 0, cov = 1)
+  q_prior = gaussian(mean = [0, 0], cov = np.eye(2))
+  # draw psuedo-data from the likelihood
+  cov = np.array([[1.0, 2.0], [2.0, 4.0]]) + np.eye(2)
+  cov_det = np.linalg.det(cov)
+  print('cov_det = {}'.format(cov_det))
+  x = np.random.multivariate_normal(np.array([1, 2]),
+                                     cov, size = n_samp).reshape(2, n_samp)
+  # repeating covariance where all samples are independent
+  cov_rep = scipy.linalg.block_diag(np.kron(np.eye(n_samp), cov))
   # where we will save the accepted values of position
   q_acc = []
+  p_dist = gaussian([0, 0], np.eye(2))
   # lets get to it
   for i in range(0, iters):
     q = current_q
-    p = p_dis.rvs()
+    p = p_dist.sample()
     # save the current value of p
-    p_current = p
+    print('p = {}'.format(p))
+    current_p = p
+    #print('q = {}'.format(q))
+    # half update of momentum
+    p = p - epsilon * grad_potential_gaussian(q, x, q_prior, cov_rep) / 2.0
     for j in range(0, L):
+      # full update of the position
+      print('before update q = {}'.format(q))
+      print('p = {}'.format(p))
+      print('p.shape = {}'.format(p.shape))
+      q = q + epsilon * p
+      print('after update q = {}'.format(q))
+      # make a full step in momentum unless we are on the last step
+      if(j < L -1):
+        p = p - epsilon * grad_potential_gaussian(q, x, q_prior, cov_rep)
 
-      # half update of momentum
-      p = p - epsilon * 
+    # make a half step and then negate the momentum term
+    p = p - epsilon * grad_potential_gaussian(q, x, q_prior, cov_rep) / 2.0
+    p = -p
 
+    # evaluate the potential and kinetic energies to see if we accept or reject
+    current_U = potential(current_q, x, q_prior, cov_rep, cov_det, n_samp)
+    current_K = np.sum(current_p**2 / 2.0)
+    proposed_U = potential(q, x, q_prior, cov_rep, cov_det, n_samp)
+    proposed_K = np.sum(p**2 / 2.0)
+    print(current_U)
+    # now see if we accept or reject
+    if(1.0 < np.exp(current_U - proposed_U + current_K - proposed_K)):
+      # then we are accepting so save it and set the new current q value
+      q_pos.append(q)
+      current_q = q 
 
-      
+  print('found q = {}'.format(q_pos))
       
       
       
+      
 if __name__ == "__main__":
   # start with a simple 1-d example
-  one_d()
-  
+  #one_d()
+  simple_gaussian_hmc()
