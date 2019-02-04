@@ -38,15 +38,41 @@ import sys
 
 import numpy as np
 from scipy.stats import multivariate_normal
-import tensorflow as tf
+import scipy
+#import tensorflow as tf
 import pandas as pd
 import matplotlib
 #matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+
 
 
-def grad_potential_gaussian(q, prior, likelihood):
+class gaussian(object):
+  def __init__(self, mean = 0, cov = 0):
+    self.mean = np.array(mean).reshape(-1, 1)
+    self.cov = cov
+    self.dim = self.mean.shape[0]
+    self.prec = np.linalg.inv(cov)
+    # check that that covariance is SPD
+    self.Z = 1.0 / np.sqrt((2 * np.pi) ** self.dim * np.linalg.det(self.cov))
+    # check that the dimensions of all the values
+    # are consistent
+    if(self.mean.shape[0] != self.cov.shape[0]):
+      raise(ValueError('Inconsistent dimensions for mean and cov'))
+    if(self.cov.shape[0] != self.cov.shape[1]):
+      raise(ValueError('Covariance Matrix should be square'))        
+
+  def sample(self):
+    print(self.mean.shape)
+    return np.random.multivariate_normal(self.mean.reshape(self.dim), self.cov).reshape(-1, 1)
+
+  def eval(self, x):
+    return self.Z * np.exp(-0.5 * (
+      (x - self.mean).T @ self.prec @ (x - self.mean)))
+  
+
+def grad_potential_gaussian(q, x, prior, cov_rep):
   """Computes gradient of potential energy for MVN
 
   Potential energy for HMC is typically defined as,
