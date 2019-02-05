@@ -94,27 +94,23 @@ def grad_potential_gaussian(q, x, prior, inv_cov):
   # assumed a standard normal prior so won't bother inverting
   # $I$ matrix for covariance
   # also assumed zero mean so wont bother subtracting away
-  print('q = {}'.format(q))
-  print(q.shape)
-  print(x.shape)
-  dq_prior = np.matmul(prior.cov, q)
-  x_rep = (x - q).reshape(-1, 1)
-  print('x_rep shape = {}'.format(x_rep.shape))
-  dq_likelihood = np.sum(np.matmul(cov_rep, x_rep), axis = 0)
+  #print('q = {}'.format(q))
+  #print(q.shape)
+  #print(x.shape)
+  dq_prior = - np.matmul(prior.prec, q)
+  dq_likelihood =  np.matmul(np.eye(2), np.sum(x - q, axis = 1).reshape(-1, 1))
+  print('dq_likelihood = {}'.format(dq_likelihood))
   return(dq_prior + dq_likelihood)
 
 
-def potential(q, x, prior, cov_rep, cov_det, n_samp):
-  x_rep = (x - q).reshape(-1, 1)
-  print('x_rep.shape = {}'.format(x_rep.shape))
-  print('q.shape = {}'.format(q.shape))
-  print('cov.shape = {}'.format(cov_rep.shape))
-  print('cov_det.shape = {}'.format(cov_det.shape))
-  U_prior = np.log(prior.eval(q))
-  print(U_prior)
-  U_likelihood = (-n_samp / 2) * (n_samp * np.log((2 * np.pi)) + np.log(cov_det)) - 0.5 * np.sum(np.matmul(np.matmul(x_rep.T, cov_rep), x_rep), axis = 0)
+def potential(q, x, prior, inv_cov, cov_det, n_samp):
+
+  U_prior = np.log(prior.eval_pdf(q))
+  x_sum = np.sum(x - q, axis = 1).reshape(-1, 1)
+  k = x.shape[1] 
+  U_likelihood = (-n_samp / 2.0 ) * (k * np.log(2 * np.pi) + np.log(2.0)) - 0.5 * x_sum.T @ np.eye(2) @ x_sum
   print(U_likelihood)
-  return(U_prior + U_likelihood)
+  return - (U_prior + U_likelihood)
 
 
 
@@ -166,7 +162,7 @@ def one_d(n_samp = 20):
   
 
 
-def simple_gaussian_hmc(epsilon = 0.002, L = 10, iters = 100, n_samp = 100):
+def simple_gaussian_hmc(epsilon = 0.005, L = 20, iters = 1000, n_samp = 10):
   """Demo to compare HMC for sample where solution is known
   
   Plot HMC draws from posterior against that of true posterior
@@ -196,16 +192,21 @@ def simple_gaussian_hmc(epsilon = 0.002, L = 10, iters = 100, n_samp = 100):
   # prior with independant components
   q_prior = gaussian(mean = [0, 0], cov = np.eye(2))
   # draw psuedo-data from the likelihood
-  cov = np.array([[1.0, 2.0], [2.0, 4.0]]) + np.eye(2)
+  cov = np.array([[1.0, 0.98], [0.98, 1.0]])
+  inv_cov = np.linalg.inv(cov)
   cov_det = np.linalg.det(cov)
   print('cov_det = {}'.format(cov_det))
-  x = np.random.multivariate_normal(np.array([1, 2]),
-                                     cov, size = n_samp).reshape(2, n_samp)
+  x_mu = np.array([1, 2])
+  x = np.random.multivariate_normal(x_mu, cov, size = n_samp).T#reshape(2, n_samp)
+  print(x.shape)
+  print('mean of x')
+  print(np.mean(x[0, :]))
+  print(np.mean(x[1, :]))
   # repeating covariance where all samples are independent
   cov_rep = scipy.linalg.block_diag(np.kron(np.eye(n_samp), cov))
   # where we will save the accepted values of position
   q_acc = []
-  p_dist = gaussian([0, 0], np.eye(2))
+  p_dist = gaussian([0.0, 0.0], np.eye(2))
   # lets get to it
   for i in range(0, iters):
     q = current_q
@@ -215,8 +216,8 @@ def simple_gaussian_hmc(epsilon = 0.002, L = 10, iters = 100, n_samp = 100):
     current_p = p
     #print('q = {}'.format(q))
     # half update of momentum
-    p = p - epsilon * grad_potential_gaussian(q, x, q_prior, cov_rep) / 2.0
-    for j in range(0, L):
+    p = p - epsilon * grad_potential_gaussian(q, x, q_prior, inv_cov) / 2.0
+    for j in range(0, L - 1):
       # full update of the position
       print('before update q = {}'.format(q))
       print('p = {}'.format(p))
@@ -224,30 +225,41 @@ def simple_gaussian_hmc(epsilon = 0.002, L = 10, iters = 100, n_samp = 100):
       q = q + epsilon * p
       print('after update q = {}'.format(q))
       # make a full step in momentum unless we are on the last step
-      if(j < L -1):
-        p = p - epsilon * grad_potential_gaussian(q, x, q_prior, cov_rep)
+      p = p - epsilon * grad_potential_gaussian(q, x, q_prior, inv_cov)
 
     # make a half step and then negate the momentum term
-    p = p - epsilon * grad_potential_gaussian(q, x, q_prior, cov_rep) / 2.0
+    p = p - epsilon * grad_potential_gaussian(q, x, q_prior, inv_cov) / 2.0
     p = -p
 
     # evaluate the potential and kinetic energies to see if we accept or reject
-    current_U = potential(current_q, x, q_prior, cov_rep, cov_det, n_samp)
-    current_K = np.sum(current_p**2 / 2.0)
-    proposed_U = potential(q, x, q_prior, cov_rep, cov_det, n_samp)
-    proposed_K = np.sum(p**2 / 2.0)
+    current_U = potential(current_q, x, q_prior, inv_cov, cov_det, n_samp)
+    current_K = np.sum(current_p**2.0 / 2.0)
+    proposed_U = potential(q, x, q_prior, inv_cov, cov_det, n_samp)
+    proposed_K = np.sum(p**2.0 / 2.0)
     print(current_U)
     # now see if we accept or reject
-    if(1.0 < np.exp(current_U - proposed_U + current_K - proposed_K)):
+    if(np.random.uniform(1) < np.exp(current_U - proposed_U + current_K - proposed_K)):
       # then we are accepting so save it and set the new current q value
       q_pos.append(q)
       current_q = q 
 
   print('found q = {}'.format(q_pos))
-      
-      
-      
-      
+  X = np.linspace(-2,4,100)
+  Y = np.linspace(-1,5,100)
+  X,Y = np.meshgrid(X,Y)
+  pos = np.dstack([X, Y])
+  rv = multivariate_normal(x_mu, cov)
+  Q = np.hstack(q_pos)
+  fig = plt.figure(figsize=(10,10))
+  ax0 = fig.add_subplot(111)
+  ax0.contour(X, Y, rv.pdf(pos).reshape(100,100))
+  ax0.scatter(Q[0, :], Q[1, :])
+  ax0.scatter(Q[0, 0], Q[1, 0], c='g')
+  ax0.scatter(Q[0, -1], Q[1, -1], c='r')
+  ax0.scatter(x[0, :], x[1, :], c='y')
+  plt.show()
+           
+
 if __name__ == "__main__":
   # start with a simple 1-d example
   #one_d()
