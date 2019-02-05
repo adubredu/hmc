@@ -30,6 +30,11 @@ is a matrix and d is dimension of q
   
 [1] Neal, Radford. "MCMC using Hamiltonian dynamics."
     Handbook of Markov Chain Monte Carlo (2011).
+
+TODO - check that the covariance for all my likelihood references
+       is set correctly (should be independent)
+     - use Gaussian class for likelihood to make life easier
+     - test some more
 """
 
 
