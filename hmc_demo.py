@@ -67,12 +67,12 @@ class gaussian(object):
     print(self.mean.shape)
     return np.random.multivariate_normal(self.mean.reshape(self.dim), self.cov).reshape(-1, 1)
 
-  def eval(self, x):
+  def eval_pdf(self, x):
     return self.Z * np.exp(-0.5 * (
       (x - self.mean).T @ self.prec @ (x - self.mean)))
   
 
-def grad_potential_gaussian(q, x, prior, cov_rep):
+def grad_potential_gaussian(q, x, prior, inv_cov):
   """Computes gradient of potential energy for MVN
 
   Potential energy for HMC is typically defined as,
