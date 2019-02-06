@@ -211,19 +211,20 @@ def simple_gaussian_hmc(epsilon = 0.003, L = 10, iters = 1000, n_samp = 10):
       number of psuedo-data samples to work with
   """
   # initial value of position
-  current_q = np.zeros(2).reshape(2,1) + 1
+  current_q = np.zeros(2).reshape(2,1) + 1.0
   q_pos = []
   # prior with independant components
-  q_prior = gaussian(mean = [0, 0], cov = np.eye(2))
+  q_prior = gaussian(mean = [0.0, 0.0], cov = np.eye(2))
   # draw psuedo-data from the likelihood
-  x_mu = np.array([1, 2])
-  cov = np.array([[1.0, 0.98], [0.98, 1.0]]) / n_samp
+  x_mu = np.array([0.5, 0.0])
+  cov = np.array([[1.0, -0.75], [-0.75, 1.0]])
   likelihood = gaussian(mean = x_mu, cov = cov)
   x = likelihood.sample(n_samp)
+  #x = x_mu.reshape(-1, 1)
   print(x.shape)
   print('mean of x')
-  print(np.mean(x[0, :]))
-  print(np.mean(x[1, :]))
+  #print(np.mean(x[0, :]))
+  #print(np.mean(x[1, :]))
   # distribution for the momentum variable (standard normal)
   p_dist = gaussian([0.0, 0.0], np.eye(2))
   # where we will save the accepted values of position
