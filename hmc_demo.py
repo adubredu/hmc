@@ -186,7 +186,7 @@ def one_d(n_samp = 20):
   
 
 
-def simple_gaussian_hmc(epsilon = 0.003, L = 10, iters = 1000, n_samp = 10):
+def simple_gaussian_hmc(epsilon = 0.15, L = 10, iters = 100, n_samp = 10):
   """Demo to compare HMC for sample where solution is known
   
   Plot HMC draws from posterior against that of true posterior
@@ -275,8 +275,8 @@ def simple_gaussian_hmc(epsilon = 0.003, L = 10, iters = 1000, n_samp = 10):
   
   print('found q = {}'.format(q_pos))
   true_post = eval_true_post(q_prior, likelihood, x)
-  X = np.linspace(0,2,500)
-  Y = np.linspace(-0.5,2.5,500)
+  X = np.linspace(-1.5,1.5,500)
+  Y = np.linspace(-1.5,1.5,500)
   X,Y = np.meshgrid(X,Y)
   pos = np.dstack([X, Y])
   rv = multivariate_normal(true_post.mean.flatten(), true_post.cov)
@@ -287,8 +287,18 @@ def simple_gaussian_hmc(epsilon = 0.003, L = 10, iters = 1000, n_samp = 10):
   ax0.scatter(Q[0, :], Q[1, :])
   ax0.scatter(Q[0, 0], Q[1, 0], c='g')
   ax0.scatter(Q[0, -1], Q[1, -1], c='r')
-  ax0.scatter(x[0, :], x[1, :], c='y')
+  #ax0.scatter(x[0, :], x[1, :], c='y')
   plt.show()
+
+  fig = plt.figure()
+  ax = fig.gca(projection='3d')
+  ax.plot_surface(X, Y, rv.pdf(pos),cmap='viridis',linewidth=0)
+  ax.set_xlabel('X axis')
+  ax.set_ylabel('Y axis')
+  ax.set_zlabel('Z axis')
+  plt.show()
+
+  
            
 
 if __name__ == "__main__":
