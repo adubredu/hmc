@@ -119,21 +119,22 @@ def grad_potential_gaussian(q, x, prior, likelihood):
   #print('q = {}'.format(q))
   #print(q.shape)
   #print(x.shape)
-  dq_prior = - np.matmul(prior.prec, q)
+  dq_prior = - np.matmul(prior.prec, (q - prior.mean).reshape(-1, 1))
   dq_likelihood =  np.matmul(likelihood.prec, np.sum(x - q, axis = 1).reshape(-1, 1))
   print('dq_likelihood = {}'.format(dq_likelihood))
-  return - (dq_prior + dq_likelihood)
+  print('dq_prior = {}'.format(dq_prior))
+  return -(dq_prior + dq_likelihood)
 
 
 def potential(q, x, prior, likelihood, n_samp):
 
   U_log_prior = np.log(prior.eval_pdf(q))
-  x_sum = np.sum(x - q, axis = 1).reshape(-1, 1)
+  x_sum = np.sum(q - x, axis = 1).reshape(-1, 1)
   k = x.shape[0] 
-  U_log_likelihood = (-n_samp / 2.0 ) * (k * np.log(2 * np.pi) + np.log(likelihood.cov_det)) - 0.5 * x_sum.T @ likelihood.prec @ x_sum
+  U_log_likelihood = n_samp * np.log(likelihood.Z) - 0.5 * x_sum.T @ likelihood.prec @ x_sum
   print(x.shape)
   print('log likelihood = {}'.format(U_log_likelihood))
-  return - (U_log_prior + U_log_likelihood)
+  return -(U_log_prior + U_log_likelihood)
 
 
 
