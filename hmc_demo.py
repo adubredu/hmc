@@ -49,19 +49,19 @@ import pandas as pd
 import matplotlib
 #matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-
+from mpl_toolkits.mplot3d import Axes3D
 
 
 
 class gaussian(object):
-  def __init__(self, mean = 0, cov = 0):
-    self.mean = np.array(mean).reshape(-1, 1)
-    self.cov = cov
+  def __init__(self, mean = 0.0, cov = 0.0):
+    self.mean = np.array(mean).reshape(-1, 1).astype(np.float64)
+    self.cov = cov.astype(np.float64)
     self.dim = self.mean.shape[0]
     self.prec = np.linalg.inv(self.cov)
     self.cov_det = np.linalg.det(self.cov)
     # check that that covariance is SPD
-    self.Z = 1.0 / np.sqrt((2 * np.pi) ** self.dim * np.linalg.det(self.cov))
+    self.Z = 1.0 / np.sqrt((2.0 * np.pi) ** self.dim * self.cov_det)
     # check that the dimensions of all the values
     # are consistent
     print(self.mean.shape)
