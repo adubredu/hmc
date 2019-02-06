@@ -58,26 +58,43 @@ class gaussian(object):
     self.mean = np.array(mean).reshape(-1, 1)
     self.cov = cov
     self.dim = self.mean.shape[0]
-    self.prec = np.linalg.inv(cov)
+    self.prec = np.linalg.inv(self.cov)
+    self.cov_det = np.linalg.det(self.cov)
     # check that that covariance is SPD
     self.Z = 1.0 / np.sqrt((2 * np.pi) ** self.dim * np.linalg.det(self.cov))
     # check that the dimensions of all the values
     # are consistent
+    print(self.mean.shape)
+    print(self.cov.shape)
     if(self.mean.shape[0] != self.cov.shape[0]):
       raise(ValueError('Inconsistent dimensions for mean and cov'))
     if(self.cov.shape[0] != self.cov.shape[1]):
       raise(ValueError('Covariance Matrix should be square'))        
 
-  def sample(self):
+  def sample(self, n_samp = 1):
     print(self.mean.shape)
-    return np.random.multivariate_normal(self.mean.reshape(self.dim), self.cov).reshape(-1, 1)
+    return np.random.multivariate_normal(self.mean.reshape(self.dim),
+                                         self.cov,
+                                         size = n_samp).T
 
   def eval_pdf(self, x):
     return self.Z * np.exp(-0.5 * (
       (x - self.mean).T @ self.prec @ (x - self.mean)))
   
 
-def grad_potential_gaussian(q, x, prior, inv_cov):
+def eval_true_post(prior, likelihood, x):
+  print(x.shape)
+  x_bar = np.mean(x, axis = 1).reshape(-1, 1)
+  #print(x_bar.shape)
+  cov = np.linalg.inv(prior.prec + likelihood.prec)
+  mean = cov @ (likelihood.prec @ (x_bar - prior.mean).reshape(-1, 1)
+                                    + (prior.prec @ prior.mean).reshape(-1, 1))
+  print('post mean = {}'.format(mean))
+  print('post cov = {}'.format(cov))
+  return gaussian(mean, cov)
+
+
+def grad_potential_gaussian(q, x, prior, likelihood):
   """Computes gradient of potential energy for MVN
 
   Potential energy for HMC is typically defined as,
