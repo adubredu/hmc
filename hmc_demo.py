@@ -258,9 +258,16 @@ def simple_gaussian_hmc(epsilon = 0.003, L = 10, iters = 1000, n_samp = 10):
     current_K = np.sum(current_p**2.0 / 2.0)
     proposed_U = potential(q, x, q_prior, likelihood, n_samp)
     proposed_K = np.sum(p**2.0 / 2.0)
-    print(current_U)
+    print('current_U = {}'.format(current_U))
+    print('proposed_U = {}'.format(proposed_U))
+    print('current_K = {}'.format(current_K))
+    print('proposed_K = {}'.format(proposed_K))
     # now see if we accept or reject
-    if(np.random.uniform(1) < np.exp(current_U - proposed_U + current_K - proposed_K)):
+    test = np.exp(current_U - proposed_U + current_K - proposed_K)
+    one_samp = np.random.uniform(low = 0.0, high = 1.0)
+    print('test = {}'.format(test))
+    print('one_samp = {}'.format(one_samp))
+    if(one_samp < test):
       # then we are accepting so save it and set the new current q value
       q_pos.append(q)
       current_q = q 
