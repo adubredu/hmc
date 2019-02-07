@@ -235,29 +235,25 @@ def simple_gaussian_hmc(epsilon = 0.2, L = 100, iters = 100, n_samp = 100):
   # draw psuedo-data from the likelihood
   x_mu = np.array([0.5, 0.0])
   cov = np.array([[1.0, 0.9], [0.9, 1.0]])
-  likelihood = Gaussian(mean = x_mu, cov = cov)
+  x_dist = Gaussian(mean = x_mu, cov = cov)
+  x = x_dist.sample(n_samp)
+  likelihood = Gaussian(mean = np.zeros(2), cov = cov)
   x = likelihood.sample(n_samp)
   # distribution for the momentum variable (standard normal)
   p_dist = Gaussian([0.0, 0.0], np.eye(2))
   # where we will save the accepted values of position
   q_acc = []
-  # lets get to it
+  # lets get too it
   for i in range(0, iters):
     q = current_q
     p = p_dist.sample()
     # save the current value of p
-    print('p = {}'.format(p))
     current_p = p
-    #print('q = {}'.format(q))
     # half update of momentum
     p = p - epsilon * grad_potential_gaussian(q, x, q_prior, likelihood) / 2.0
     for j in range(0, L - 1):
       # full update of the position
-      print('before update q = {}'.format(q))
-      print('p = {}'.format(p))
-      print('p.shape = {}'.format(p.shape))
       q = q + epsilon * p
-      print('after update q = {}'.format(q))
       # make a full step in momentum unless we are on the last step
       p = p - epsilon * grad_potential_gaussian(q, x, q_prior, likelihood)
       
