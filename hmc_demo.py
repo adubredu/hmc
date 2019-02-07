@@ -76,21 +76,44 @@ class Gaussian(object):
     return np.random.multivariate_normal(self.mean.reshape(self.dim),
                                          self.cov,
                                          size = n_samp).T
-
   def eval_pdf(self, x):
     return self.Z * np.exp(-0.5 * (
       (x - self.mean).T @ self.prec @ (x - self.mean)))
   
 
 def eval_true_post(prior, likelihood, x):
-  print(x.shape)
+  """Will evaluate true posterior for Gaussian Prior/Posterior
+  
+  For Gaussian Prior N(q|mu_0, sigma_0)
+      Gaussian Likelihood N(x|mu_l, sigma_l)
+  From [1, eqn. 4.124 and 4.125]
+  Posterior is,
+  p(q|x) = N(q | mu, sigma)
+  Sigma^{-1} = Sigma_0^{-1} + Sigma_l^{-1}
+  mu = Sigma (Sigma_l^{-1}x + Sigma_0^{-1}mu_0)
+  (To use result from [1], matrix A is set to identity and 
+  vector b is set to zero).
+
+  Args:
+    prior (Gaussian):
+      Gaussian Object
+    likelihood (Gaussian):
+      Gaussian Object    
+    x (array):
+      our data, with each column being an independent sample
+  
+  Returns:
+    Gaussian Object with our true posterior
+  
+  References:
+  [1] Murphy, K. (2012). "Machine Learning : A Probabilistic Perspective." 
+      Cambridge: MIT Press.
+  """
+  
   x_bar = np.mean(x, axis = 1).reshape(-1, 1)
   #print(x_bar.shape)
   cov = np.linalg.inv(prior.prec + likelihood.prec)
-  mean = cov @ (likelihood.prec @ (x_bar - prior.mean).reshape(-1, 1)
-                                    + (prior.prec @ prior.mean).reshape(-1, 1))
-  print('post mean = {}'.format(mean))
-  print('post cov = {}'.format(cov))
+  mean = cov @ (likelihood.prec @ x_bar + prior.prec @ prior.mean)
   return Gaussian(mean, cov)
 
 
