@@ -53,7 +53,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 
-class gaussian(object):
+class Gaussian(object):
   def __init__(self, mean = 0.0, cov = 0.0):
     self.mean = np.array(mean).reshape(-1, 1).astype(np.float64)
     self.cov = cov.astype(np.float64)
@@ -91,7 +91,7 @@ def eval_true_post(prior, likelihood, x):
                                     + (prior.prec @ prior.mean).reshape(-1, 1))
   print('post mean = {}'.format(mean))
   print('post cov = {}'.format(cov))
-  return gaussian(mean, cov)
+  return Gaussian(mean, cov)
 
 
 def grad_potential_gaussian(q, x, prior, likelihood):
@@ -186,7 +186,7 @@ def one_d(n_samp = 20):
   
 
 
-def simple_gaussian_hmc(epsilon = 0.15, L = 10, iters = 100, n_samp = 10):
+def simple_gaussian_hmc(epsilon = 0.3, L = 50, iters = 100, n_samp = 10):
   """Demo to compare HMC for sample where solution is known
   
   Plot HMC draws from posterior against that of true posterior
@@ -214,11 +214,11 @@ def simple_gaussian_hmc(epsilon = 0.15, L = 10, iters = 100, n_samp = 10):
   current_q = np.zeros(2).reshape(2,1) + 1.0
   q_pos = []
   # prior with independant components
-  q_prior = gaussian(mean = [0.0, 0.0], cov = np.eye(2))
+  q_prior = Gaussian(mean = [0.0, 0.0], cov = np.eye(2))
   # draw psuedo-data from the likelihood
   x_mu = np.array([0.5, 0.0])
-  cov = np.array([[1.0, -0.75], [-0.75, 1.0]])
-  likelihood = gaussian(mean = x_mu, cov = cov)
+  cov = np.array([[1.0, 0.2], [0.2, 1.0]])
+  likelihood = Gaussian(mean = x_mu, cov = cov)
   x = likelihood.sample(n_samp)
   #x = x_mu.reshape(-1, 1)
   print(x.shape)
@@ -226,7 +226,7 @@ def simple_gaussian_hmc(epsilon = 0.15, L = 10, iters = 100, n_samp = 10):
   #print(np.mean(x[0, :]))
   #print(np.mean(x[1, :]))
   # distribution for the momentum variable (standard normal)
-  p_dist = gaussian([0.0, 0.0], np.eye(2))
+  p_dist = Gaussian([0.0, 0.0], np.eye(2))
   # where we will save the accepted values of position
   q_acc = []
   # lets get to it
@@ -283,7 +283,7 @@ def simple_gaussian_hmc(epsilon = 0.15, L = 10, iters = 100, n_samp = 10):
   Q = np.hstack(q_pos)
   fig = plt.figure(figsize=(10,10))
   ax0 = fig.add_subplot(111)
-  ax0.contour(X, Y, rv.pdf(pos).reshape(500,500))
+  ax0.contour(X, Y, rv.pdf(pos).reshape(500,500), 2)
   ax0.scatter(Q[0, :], Q[1, :])
   ax0.scatter(Q[0, 0], Q[1, 0], c='g')
   ax0.scatter(Q[0, -1], Q[1, -1], c='r')
