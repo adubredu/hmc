@@ -54,6 +54,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 class Gaussian(object):
+  """Class for Multivariate Gaussian"""
   def __init__(self, mean = 0.0, cov = 0.0):
     self.mean = np.array(mean).reshape(-1, 1).astype(np.float64)
     self.cov = cov.astype(np.float64)
@@ -123,8 +124,10 @@ def grad_potential_gaussian(q, x, prior, likelihood):
   Potential energy for HMC is typically defined as,
   U(q) = -log(p(q) p(x | q)) = -log(p(q)) - log(p(x | q))
   And we will assume that we have a Gaussian Prior and likelihood.
-  From the Matrix Cookbook [1, equation 85], know that
+  From the Matrix Cookbook [1, eqn. 85], know that
   d(log(p(x)))/dq = Sigma^{-1}(q - mu)
+  (85) applies to our prior, and equation (86) applies for the likelihood.
+  They only differ by a negative sign.
   This is because we are using the log of the distribution, so we get rid
   of the exp() and seperate the exponent from the normalising constant,
   and when taking the derivative the constant terms will vanish, and
@@ -207,7 +210,7 @@ def one_d(n_samp = 20):
   
 
 
-def simple_gaussian_hmc(epsilon = 0.3, L = 50, iters = 100, n_samp = 10):
+def simple_gaussian_hmc(epsilon = 0.05, L = 10, iters = 1000, n_samp = 100):
   """Demo to compare HMC for sample where solution is known
   
   Plot HMC draws from posterior against that of true posterior
@@ -232,20 +235,15 @@ def simple_gaussian_hmc(epsilon = 0.3, L = 50, iters = 100, n_samp = 10):
       number of psuedo-data samples to work with
   """
   # initial value of position
-  current_q = np.zeros(2).reshape(2,1) + 1.0
+  current_q = np.zeros(2).reshape(2,1)
   q_pos = []
   # prior with independant components
   q_prior = Gaussian(mean = [0.0, 0.0], cov = np.eye(2))
   # draw psuedo-data from the likelihood
   x_mu = np.array([0.5, 0.0])
-  cov = np.array([[1.0, 0.2], [0.2, 1.0]])
+  cov = np.array([[1.0, 0.9], [0.9, 1.0]])
   likelihood = Gaussian(mean = x_mu, cov = cov)
   x = likelihood.sample(n_samp)
-  #x = x_mu.reshape(-1, 1)
-  print(x.shape)
-  print('mean of x')
-  #print(np.mean(x[0, :]))
-  #print(np.mean(x[1, :]))
   # distribution for the momentum variable (standard normal)
   p_dist = Gaussian([0.0, 0.0], np.eye(2))
   # where we will save the accepted values of position
@@ -269,7 +267,7 @@ def simple_gaussian_hmc(epsilon = 0.3, L = 50, iters = 100, n_samp = 10):
       print('after update q = {}'.format(q))
       # make a full step in momentum unless we are on the last step
       p = p - epsilon * grad_potential_gaussian(q, x, q_prior, likelihood)
-
+      
     # make a half step and then negate the momentum term
     p = p - epsilon * grad_potential_gaussian(q, x, q_prior, likelihood) / 2.0
     p = -p
