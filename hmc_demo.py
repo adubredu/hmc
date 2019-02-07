@@ -277,20 +277,43 @@ def simple_gaussian_hmc(epsilon = 0.2, L = 100, iters = 100, n_samp = 100):
   # done sampling, lets print and plot our results
   accept_ratio = len(q_pos) / iters
   print('Accept Ratio = {}'.format(accept_ratio))
+  plot_results(q_prior, likelihood, x, q_pos)
+
+  
+           
+
+def plot_results(q_prior, likelihood, x, q_pos):
+  """Plot prior, data and our posterior"""
+
+  # evaluate the true posterior
   true_post = eval_true_post(q_prior, likelihood, x)
-  X = np.linspace(-1.5,1.5,500)
-  Y = np.linspace(-1.5,1.5,500)
+  X = np.linspace(-2.5,2.5,500)
+  Y = np.linspace(-2.5,2.5,500)
   X,Y = np.meshgrid(X,Y)
   pos = np.dstack([X, Y])
-  rv = multivariate_normal(true_post.mean.flatten(), true_post.cov)
+  # generate RV for true posterior and prior so we can evaluate and get contours
+  true_post_rv = multivariate_normal(true_post.mean.flatten(), true_post.cov)
+  prior_rv = multivariate_normal(q_prior.mean.flatten(), q_prior.cov)
+  # stack all found positions in list into an array
   Q = np.hstack(q_pos)
+  # plot prior, data and likelihood
   fig = plt.figure(figsize=(10,10))
-  ax0 = fig.add_subplot(111)
-  contour = ax0.contour(X, Y, rv.pdf(pos).reshape(500,500), 4)
-  ax0.clabel(contour, inline=1, fontsize=10)
-  ax0.scatter(Q[0, :], Q[1, :], alpha = 0.2)
-  ax0.scatter(Q[0, 0], Q[1, 0], c='g')
-  ax0.scatter(Q[0, -1], Q[1, -1], c='r')
+  ax1 = fig.add_subplot(131)
+  ax1.set_xlim([-2.5, 2.5])
+  ax1.set_ylim([-2.5, 2.5])
+  contour = ax1.contour(X, Y, prior_rv.pdf(pos).reshape(500,500), 4)
+  ax2 = fig.add_subplot(132)
+  ax2.set_xlim([-2.5, 2.5])
+  ax2.set_ylim([-2.5, 2.5])
+  ax2.scatter(x[0, :], x[1, :])
+  ax3 = fig.add_subplot(133)
+  ax3.set_xlim([-2.5, 2.5])
+  ax3.set_ylim([-2.5, 2.5])
+  contour = ax3.contour(X, Y, true_post_rv.pdf(pos).reshape(500,500), 4)
+  ax3.clabel(contour, inline=1, fontsize=10)
+  ax3.scatter(Q[0, :], Q[1, :], alpha = 0.2)
+  ax3.scatter(Q[0, 0], Q[1, 0], c='g')
+  ax3.scatter(Q[0, -1], Q[1, -1], c='r')
   #ax0.scatter(x[0, :], x[1, :], c='y')
   plt.show()
 
@@ -301,9 +324,8 @@ def simple_gaussian_hmc(epsilon = 0.2, L = 100, iters = 100, n_samp = 100):
   ax.set_ylabel('Y axis')
   ax.set_zlabel('Z axis')
   plt.show()
-
   
-           
+      
 
 if __name__ == "__main__":
   # start with a simple 1-d example
