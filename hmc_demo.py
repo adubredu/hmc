@@ -134,16 +134,14 @@ def grad_potential_gaussian(q, x, prior, likelihood):
     x (Np array)
       data drawn from the likelihood. Each column is an independent
       draw from likelihood (column = single sample)
+
+  References:
+  [1] Petersen, Kaare Brandt, and Michael Syskind Pedersen. 
+  "The matrix cookbook." Technical University of Denmark 7.15 (2012): 510.
   """
   # now compute the gradient
-  # assumed a standard normal prior so won't bother inverting
-  # $I$ matrix for covariance
-  # also assumed zero mean so wont bother subtracting away
-  #print('q = {}'.format(q))
-  #print(q.shape)
-  #print(x.shape)
   dq_prior = - np.matmul(prior.prec, (q - prior.mean).reshape(-1, 1))
-  dq_likelihood =  np.matmul(likelihood.prec, np.sum(x - q, axis = 1).reshape(-1, 1))
+  dq_likelihood =  np.matmul(likelihood.prec, np.mean(x - q, axis = 1).reshape(-1, 1))
   print('dq_likelihood = {}'.format(dq_likelihood))
   print('dq_prior = {}'.format(dq_prior))
   return -(dq_prior + dq_likelihood)
@@ -152,9 +150,9 @@ def grad_potential_gaussian(q, x, prior, likelihood):
 def potential(q, x, prior, likelihood, n_samp):
 
   U_log_prior = np.log(prior.eval_pdf(q))
-  x_sum = np.sum(q - x, axis = 1).reshape(-1, 1)
+  x_sum = np.mean(x - q, axis = 1).reshape(-1, 1)
   k = x.shape[0] 
-  U_log_likelihood = n_samp * np.log(likelihood.Z) - 0.5 * x_sum.T @ likelihood.prec @ x_sum
+  U_log_likelihood = - 0.5 * x_sum.T @ likelihood.prec @ x_sum # n_samp * np.log(likelihood.Z)
   print(x.shape)
   print('log likelihood = {}'.format(U_log_likelihood))
   return -(U_log_prior + U_log_likelihood)
