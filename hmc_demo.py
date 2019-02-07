@@ -292,9 +292,10 @@ def simple_gaussian_hmc(epsilon = 0.3, L = 50, iters = 100, n_samp = 10):
       # then we are accepting so save it and set the new current q value
       q_pos.append(q)
       current_q = q 
-
-  
-  print('found q = {}'.format(q_pos))
+      
+  # done sampling, lets print and plot our results
+  accept_ratio = len(q_pos) / iters
+  print('Accept Ratio = {}'.format(accept_ratio))
   true_post = eval_true_post(q_prior, likelihood, x)
   X = np.linspace(-1.5,1.5,500)
   Y = np.linspace(-1.5,1.5,500)
