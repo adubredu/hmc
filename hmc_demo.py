@@ -65,15 +65,12 @@ class Gaussian(object):
     self.Z = 1.0 / np.sqrt((2.0 * np.pi) ** self.dim * self.cov_det)
     # check that the dimensions of all the values
     # are consistent
-    print(self.mean.shape)
-    print(self.cov.shape)
     if(self.mean.shape[0] != self.cov.shape[0]):
       raise(ValueError('Inconsistent dimensions for mean and cov'))
     if(self.cov.shape[0] != self.cov.shape[1]):
       raise(ValueError('Covariance Matrix should be square'))        
 
   def sample(self, n_samp = 1):
-    print(self.mean.shape)
     return np.random.multivariate_normal(self.mean.reshape(self.dim),
                                          self.cov,
                                          size = n_samp).T
@@ -145,19 +142,15 @@ def grad_potential_gaussian(q, x, prior, likelihood):
   # now compute the gradient
   dq_prior = - np.matmul(prior.prec, (q - prior.mean).reshape(-1, 1))
   dq_likelihood =  np.matmul(likelihood.prec, np.mean(x - q, axis = 1).reshape(-1, 1))
-  print('dq_likelihood = {}'.format(dq_likelihood))
-  print('dq_prior = {}'.format(dq_prior))
   return -(dq_prior + dq_likelihood)
 
 
 def potential(q, x, prior, likelihood, n_samp):
-
+  "Calculate the potential energy at current position"
   U_log_prior = np.log(prior.eval_pdf(q))
   x_sum = np.mean(x - q, axis = 1).reshape(-1, 1)
   k = x.shape[0] 
-  U_log_likelihood = - 0.5 * x_sum.T @ likelihood.prec @ x_sum # n_samp * np.log(likelihood.Z)
-  print(x.shape)
-  print('log likelihood = {}'.format(U_log_likelihood))
+  U_log_likelihood = - 0.5 * x_sum.T @ likelihood.prec @ x_sum - n_samp * np.log(likelihood.Z)
   return -(U_log_prior + U_log_likelihood)
 
 
@@ -210,7 +203,7 @@ def one_d(n_samp = 20):
   
 
 
-def simple_gaussian_hmc(epsilon = 0.05, L = 10, iters = 1000, n_samp = 100):
+def simple_gaussian_hmc(epsilon = 0.2, L = 100, iters = 100, n_samp = 100):
   """Demo to compare HMC for sample where solution is known
   
   Plot HMC draws from posterior against that of true posterior
