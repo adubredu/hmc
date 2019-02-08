@@ -65,8 +65,10 @@ def one_d(n_samp = 20):
   # set intial momentum to 1
   p[:,0] = 1.0
 
+  # just setting up the figure for some subplots
   fig = plt.figure()
   ax = fig.add_subplot(1,1,1)
+  # removing border from global plot
   ax.spines['top'].set_color('none')
   ax.spines['bottom'].set_color('none')
   ax.spines['left'].set_color('none')
@@ -85,7 +87,8 @@ def one_d(n_samp = 20):
     axs.set_ylim([-1.6, 1.6])
     axs.set_title('$\epsilon$ = {}'.format(epsilon[j]), usetex=True)
     axs.tick_params(axis = 'both', width = 0.2)
-  ax.set_ylabel('Momentum $(p)$')
+  # adding global labels
+  ax.set_ylabel('Momentum $(p)$', usetex=True)
   ax.set_xlabel('Position $(q)$', usetex=True)
   plt.show()  
   
