@@ -44,7 +44,6 @@ import sys
 import numpy as np
 from scipy.stats import multivariate_normal
 import scipy
-#import tensorflow as tf
 import pandas as pd
 import matplotlib
 #matplotlib.use('Agg')
@@ -153,54 +152,6 @@ def potential(q, x, prior, likelihood, n_samp):
   U_log_likelihood = - 0.5 * x_sum.T @ likelihood.prec @ x_sum - n_samp * np.log(likelihood.Z)
   return -(U_log_prior + U_log_likelihood)
 
-
-
-def one_d(n_samp = 20):
-  """ simple 1-d example from Neal Sec 2.
-  Will try and reproduce Fig. 1
-  
-  Corresponds to a standard Normal N(0,1)
-  U(q) = q^2 / 2
-  K(m) = p^2 / 2
-  M = 1, so we don't need to worry about the mass here
-  
-  the true solution is of the form,
-  q(t) = r * cos(a + t)
-  p(t) = -r * sin(a + t)
-  """
-  # will run tests for different leap from sizes to compare
-  epsilon = np.array([0.1, 0.15, 0.3, 1.3])
-  tmp = np.linspace(-1.0, 1.0, 50) # used to plot true solution
-  # initialise position and momentum
-  q = np.zeros([4,n_samp])
-  p = np.zeros([4,n_samp])
-  # set intial momentum to 1
-  p[:,0] = 1.0
-
-  fig = plt.figure()
-  ax = fig.add_subplot(1,1,1)
-  ax.spines['top'].set_color('none')
-  ax.spines['bottom'].set_color('none')
-  ax.spines['left'].set_color('none')
-  ax.spines['right'].set_color('none')
-  ax.tick_params(labelcolor='w', top=False, bottom=False, left=False, right=False)
-  for j in range(0, len(epsilon)):
-    axs = fig.add_subplot(2,2, j + 1)
-    for i in range(1, n_samp):
-      p[0, i] = p[0, i - 1] - epsilon[j] / 2.0 * q[0, i - 1] # half update
-      q[0, i] = q[0, i - 1] + epsilon[j] * p[0, i]           # full update
-      p[0, i] = p[0, i] - epsilon[j] / 2.0 * q[0, i]         # second half update
-    axs.scatter(q, p)
-    axs.plot(tmp, np.sqrt(1.0 - np.square(tmp)), c='gray', alpha=0.4)
-    axs.plot(tmp, - np.sqrt(1.0 - np.square(tmp)), c='gray', alpha=0.4)
-    axs.set_xlim([-1.6, 1.6])
-    axs.set_ylim([-1.6, 1.6])
-    axs.set_title('$\epsilon$ = {}'.format(epsilon[j]), usetex=True)
-    axs.tick_params(axis = 'both', width = 0.2)
-  ax.set_ylabel('Momentum $(p)$')
-  ax.set_xlabel('Position $(q)$', usetex=True)
-  plt.show()  
-  
 
 
 def simple_gaussian_hmc(epsilon = 0.2, L = 100, iters = 100, n_samp = 100):
