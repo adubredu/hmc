@@ -244,28 +244,41 @@ def plot_results(q_prior, likelihood, x, q_pos):
   Q = np.hstack(q_pos)
   # plot prior, data and likelihood
   fig = plt.figure(figsize=(10,10))
+  # add the global x and y labels
+  ax = fig.add_subplot(1,1,1)
+  ax.spines['top'].set_color('none')
+  ax.spines['bottom'].set_color('none')
+  ax.spines['left'].set_color('none')
+  ax.spines['right'].set_color('none')
+  ax.tick_params(labelcolor='w', top=False, bottom=False, left=False, right=False)
+  ax.set_ylabel('$q_2$')
+  ax.set_xlabel('$q_1$')
+  # now add the proper plots
   ax1 = fig.add_subplot(131)
+  ax1.set_title('Prior')
   ax1.set_xlim([-2.5, 2.5])
   ax1.set_ylim([-2.5, 2.5])
   contour = ax1.contour(X, Y, prior_rv.pdf(pos).reshape(500,500), 4)
   ax2 = fig.add_subplot(132)
+  ax2.set_title('Data')
   ax2.set_xlim([-2.5, 2.5])
   ax2.set_ylim([-2.5, 2.5])
   ax2.scatter(x[0, :], x[1, :])
   ax3 = fig.add_subplot(133)
+  ax3.set_title('Posterior')
   ax3.set_xlim([-2.5, 2.5])
   ax3.set_ylim([-2.5, 2.5])
   contour = ax3.contour(X, Y, true_post_rv.pdf(pos).reshape(500,500), 4)
   ax3.clabel(contour, inline=1, fontsize=10)
-  ax3.scatter(Q[0, :], Q[1, :], alpha = 0.2)
-  ax3.scatter(Q[0, 0], Q[1, 0], c='g')
-  ax3.scatter(Q[0, -1], Q[1, -1], c='r')
-  #ax0.scatter(x[0, :], x[1, :], c='y')
+  ax3.scatter(Q[0, :], Q[1, :], alpha = 0.2, label = 'samples')
+  ax3.scatter(Q[0, 0], Q[1, 0], c='g', label = 'start pos.')
+  ax3.scatter(Q[0, -1], Q[1, -1], c='r', label = 'end pos.')
+  ax3.legend()
   plt.show()
 
   fig = plt.figure()
   ax = fig.gca(projection='3d')
-  ax.plot_surface(X, Y, rv.pdf(pos),cmap='viridis',linewidth=0)
+  ax.plot_surface(X, Y, true_post_rv.pdf(pos),cmap='viridis',linewidth=0)
   ax.set_xlabel('X axis')
   ax.set_ylabel('Y axis')
   ax.set_zlabel('Z axis')
@@ -274,6 +287,4 @@ def plot_results(q_prior, likelihood, x, q_pos):
       
 
 if __name__ == "__main__":
-  # start with a simple 1-d example
-  #one_d()
   simple_gaussian_hmc()
