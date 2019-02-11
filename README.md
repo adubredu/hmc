@@ -19,3 +19,8 @@ A toy problem that uses HMC to sample from posterior. Is a simple 2-d example, w
 
 
 Conjugate model so can compare analytical solution with HMC samples to see if we are getting there.
+
+# References
+
+[1] Neal, Radford. "MCMC using Hamiltonian dynamics."
+    Handbook of Markov Chain Monte Carlo (2011).
