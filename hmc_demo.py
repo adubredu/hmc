@@ -206,7 +206,7 @@ def simple_gaussian_hmc(epsilon = 0.2, L = 100, iters = 100, n_samp = 100):
     # make a half step and then negate the momentum term
     p = p - epsilon * grad_potential_gaussian(q, x, q_prior, likelihood) / 2.0
     p = -p
-
+    
     # evaluate the potential and kinetic energies to see if we accept or reject
     current_U = potential(current_q, x, q_prior, likelihood, n_samp)
     current_K = current_p.T @ current_p / 2.0
@@ -274,14 +274,6 @@ def plot_results(q_prior, likelihood, x, q_pos):
   ax3.scatter(Q[0, 0], Q[1, 0], c='g', label = 'start pos.')
   ax3.scatter(Q[0, -1], Q[1, -1], c='r', label = 'end pos.')
   ax3.legend()
-  plt.show()
-
-  fig = plt.figure()
-  ax = fig.gca(projection='3d')
-  ax.plot_surface(X, Y, true_post_rv.pdf(pos),cmap='viridis',linewidth=0)
-  ax.set_xlabel('X axis')
-  ax.set_ylabel('Y axis')
-  ax.set_zlabel('Z axis')
   plt.show()
   
       
