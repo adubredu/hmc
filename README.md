@@ -11,9 +11,16 @@ Follows from some of the examples from [1, Fig. 1]. For a 1-D (one position vari
 
 A toy problem that uses HMC to sample from posterior. Is a simple 2-d example, where we are interested in the posterior over the mean (assuming known covariance in lieklihood). Ie., using a conjugate Gaussian model,
 
-`p(q) = prior = N(q|mu_0, Sigma_0)`
-`p(x|q) = Likelihood = N(x|q, Sigma_L)`
-`p(q|x) = poterior, proportional to p(q)p(x|q)`
+```p(q) = prior = N(q|mu_0, Sigma_0)```
+
+```p(x|q) = Likelihood = N(x|q, Sigma_L)```
+
+```p(q|x) = poterior, proportional to p(q)p(x|q)```
 
 
 Conjugate model so can compare analytical solution with HMC samples to see if we are getting there.
+
+# References
+
+[1] Neal, Radford. "MCMC using Hamiltonian dynamics."
+    Handbook of Markov Chain Monte Carlo (2011).
