@@ -49,7 +49,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 class Gaussian(object):
   """Class for Multivariate Gaussian"""
-  def __init__(self, mean = 0.0, cov = 0.0):
+  def __init__(self, mean, cov):
     self.mean = np.array(mean).reshape(-1, 1).astype(np.float64)
     self.cov = cov.astype(np.float64)
     self.dim = self.mean.shape[0]
@@ -103,9 +103,11 @@ def eval_true_post(prior, likelihood, x):
   """
   
   x_bar = np.mean(x, axis = 1).reshape(-1, 1)
+  n_samp = x.shape[1]
   #print(x_bar.shape)
-  cov = np.linalg.inv(prior.prec + likelihood.prec)
-  mean = cov @ (likelihood.prec @ x_bar + prior.prec @ prior.mean)
+  cov =  np.linalg.inv(prior.prec + n_samp * likelihood.prec)
+  mean = cov @ (n_samp * likelihood.prec @ x_bar + prior.prec @ prior.mean)
+  print('true mean = {}'.format(mean))
   return Gaussian(mean, cov)
 
 
@@ -135,21 +137,21 @@ def grad_potential_gaussian(q, x, prior, likelihood):
   """
   # now compute the gradient
   dq_prior = - np.matmul(prior.prec, (q - prior.mean).reshape(-1, 1))
-  dq_likelihood =  np.matmul(likelihood.prec, np.mean(x - q, axis = 1).reshape(-1, 1))
+  dq_likelihood =  np.matmul(likelihood.prec, np.sum(x - q, axis = 1).reshape(-1, 1))
   return -(dq_prior + dq_likelihood)
 
 
 def potential(q, x, prior, likelihood, n_samp):
   "Calculate the potential energy at current position"
   U_log_prior = np.log(prior.eval_pdf(q))
-  x_sum = np.mean(x - q, axis = 1).reshape(-1, 1)
+  x_sum = np.sum(x - q, axis = 1).reshape(-1, 1)
   k = x.shape[0] 
   U_log_likelihood = - 0.5 * x_sum.T @ likelihood.prec @ x_sum - n_samp * np.log(likelihood.Z)
   return -(U_log_prior + U_log_likelihood)
 
 
 
-def simple_gaussian_hmc(epsilon = 0.2, L = 100, iters = 100, n_samp = 100):
+def simple_gaussian_hmc(epsilon = 0.02, L = 100, iters = 100, n_samp = 10):
   """Demo to compare HMC for sample where solution is known
   
   Plot HMC draws from posterior against that of true posterior
@@ -179,12 +181,12 @@ def simple_gaussian_hmc(epsilon = 0.2, L = 100, iters = 100, n_samp = 100):
   # prior with independant components
   q_prior = Gaussian(mean = [0.0, 0.0], cov = np.eye(2))
   # draw psuedo-data from the likelihood
-  x_mu = np.array([0.5, 0.0])
-  cov = np.array([[1.0, 0.9], [0.9, 1.0]])
+  x_mu = np.array([0.5, -0.2])
+  cov = np.array([[1.0, 0.9], [0.9, 1.0]]) / n_samp
   x_dist = Gaussian(mean = x_mu, cov = cov)
   x = x_dist.sample(n_samp)
   likelihood = Gaussian(mean = np.zeros(2), cov = cov)
-  x = likelihood.sample(n_samp)
+  #x = likelihood.sample(n_samp)
   # distribution for the momentum variable (standard normal)
   p_dist = Gaussian([0.0, 0.0], np.eye(2))
   # where we will save the accepted values of position
