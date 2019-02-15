@@ -151,7 +151,7 @@ def potential(q, x, prior, likelihood, n_samp):
 
 
 
-def simple_gaussian_hmc(epsilon = 0.02, L = 100, iters = 100, n_samp = 10):
+def simple_gaussian_hmc(epsilon = 0.05, L = 15, iters = 1000, n_samp = 10):
   """Demo to compare HMC for sample where solution is known
   
   Plot HMC draws from posterior against that of true posterior
@@ -181,8 +181,8 @@ def simple_gaussian_hmc(epsilon = 0.02, L = 100, iters = 100, n_samp = 10):
   # prior with independant components
   q_prior = Gaussian(mean = [0.0, 0.0], cov = np.eye(2))
   # draw psuedo-data from the likelihood
-  x_mu = np.array([0.5, -0.2])
-  cov = np.array([[1.0, 0.9], [0.9, 1.0]]) / n_samp
+  x_mu = np.array([1.0, 2.0])
+  cov = np.array([[1.0, 0.9], [0.9, 1.0]])
   x_dist = Gaussian(mean = x_mu, cov = cov)
   x = x_dist.sample(n_samp)
   likelihood = Gaussian(mean = np.zeros(2), cov = cov)
