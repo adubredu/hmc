@@ -18,19 +18,19 @@ def MVN_likelihood(q, cov):
 
 def potential(q, prior, data):
   likelihood = MVN_likelihood(q, cov)
-  return (prior.log_prob(q) + tf.reduce_mean(likelihood.log_prob(data)))
+  return (prior.log_prob(q) + tf.reduce_sum(likelihood.log_prob(data)))
 
 
 def plot_results(q_prior, cov_array, x, q_pos):
   """Plot prior, data and our posterior"""
 
   # evaluate the true posterior
+  print('data shape = {}'.format(x.shape))
   x_bar = np.mean(x, axis = 0).reshape(-1, 1)
-  print(x.shape)
-  print(x_bar.shape)
+  n_samp = x.shape[0]
   likelihood_prec = np.linalg.inv(cov_array)
-  cov = np.linalg.inv( np.eye(2) + likelihood_prec)
-  mean = cov @ (likelihood_prec @ x_bar + np.array([[0], [0]]))
+  cov = np.linalg.inv(np.eye(2) + n_samp * likelihood_prec)
+  mean = cov @ (n_samp * likelihood_prec @ x_bar)
   X = np.linspace(-2.5,2.5,500)
   Y = np.linspace(-2.5,2.5,500)
   X,Y = np.meshgrid(X,Y)
@@ -70,11 +70,11 @@ def plot_results(q_prior, cov_array, x, q_pos):
   ax3.set_title('Posterior')
   ax3.set_xlim([-2.5, 2.5])
   ax3.set_ylim([-2.5, 2.5])
-  contour = ax3.contour(X, Y, true_post_rv.pdf(pos).reshape(500,500), 4)
-  ax3.clabel(contour, inline=1, fontsize=10)
   ax3.scatter(Q[:, 0], Q[:, 1], alpha = 0.2, label = 'samples')
   ax3.scatter(Q[0, 0], Q[0, 1], c='g', label = 'start pos.')
   ax3.scatter(Q[-1, 0], Q[-1, 1], c='r', label = 'end pos.')
+  contour = ax3.contour(X, Y, true_post_rv.pdf(pos).reshape(500,500), 4)
+  ax3.clabel(contour, inline=1, fontsize=10)
   ax3.legend()
   plt.show()
   
@@ -82,10 +82,11 @@ def plot_results(q_prior, cov_array, x, q_pos):
 
 if __name__ == '__main__':
   # our generative model
+  n_samp = 10
   cov_array = np.array([[1.0, 0.9], [0.9, 1.0]]).astype(np.float64)
   cov = tf.constant(cov_array, dtype=tf.float64)
   prior = MVN_prior(2)
-  data = MVN_data(np.array([1.0, 2.0]), cov_array, 100)
+  data = MVN_data(np.array([1.0, 2.0]), cov_array, n_samp)
 
   # Create state to hold updated `step_size`.
   step_size = tf.get_variable(
